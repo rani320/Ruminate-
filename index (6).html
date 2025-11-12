@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ruminate — AI Study Assistant</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#93a0b3; --accent:#6ee7b7;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; background:
+      radial-gradient(800px 400px at 10% 10%, rgba(110,231,183,0.06), transparent 10%),
+      linear-gradient(180deg, #071023 0%, #071028 60%);
+      color: #e6eef6;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    header{padding:28px 20px; display:flex; align-items:center; gap:16px; max-width:1100px; margin:0 auto;}
+    .logo{
+      width:64px; height:64px; border-radius:12px;
+      background:linear-gradient(135deg,#6ee7b7,#60a5fa);
+      display:flex; align-items:center; justify-content:center; font-weight:700; color:#042;
+      box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+    }
+    h1{font-size:20px; margin:0}
+    p.lead{margin:4px 0 0; color:var(--muted); font-size:13px}
+    main{max-width:1100px; margin:18px auto; padding:20px; display:grid; grid-template-columns: 420px 1fr; gap:20px;}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px; border-radius:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.5);}
+    .left .feature{margin-bottom:12px; padding:10px; border-radius:10px; background:var(--glass); color:var(--muted); font-size:14px}
+    .btn{display:inline-block; padding:10px 14px; border-radius:10px; background:linear-gradient(90deg,#6ee7b7,#60a5fa); color:#042; font-weight:600; cursor:pointer; text-decoration:none; border:none}
+    .chat{display:flex; flex-direction:column; height:60vh; min-height:360px;}
+    .messages{flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px}
+    .msg{max-width:78%; padding:10px 12px; border-radius:10px; font-size:14px}
+    .msg.user{align-self:flex-end; background:linear-gradient(90deg,#60a5fa,#6ee7b7); color:#022}
+    .msg.bot{align-self:flex-start; background:rgba(255,255,255,0.03); color:var(--muted); border:1px solid rgba(255,255,255,0.02)}
+    .composer{display:flex; gap:8px; padding-top:12px; align-items:center}
+    .composer input{flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
+    footer{max-width:1100px; margin:18px auto; color:var(--muted); font-size:13px; padding:0 20px 40px;}
+    @media(max-width:880px){
+      main{grid-template-columns:1fr; padding:12px}
+      .logo{width:52px;height:52px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">R</div>
+    <div>
+      <h1>Ruminate — AI Study Assistant</h1>
+      <p class="lead">Smart notes, quick explanations, and practice — front-end demo (offline)</p>
+    </div>
+    <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+      <button class="btn" id="sampleTopBtn">Sample Q&A</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="panel left">
+      <h3 style="margin-top:0">Features (demo)</h3>
+      <div class="feature"><strong>Instant explanations:</strong> Ask a question and get a clear answer with examples.</div>
+      <div class="feature"><strong>Practice quizzes:</strong> Multiple choice and short-answer practice (manual).</div>
+      <div class="feature"><strong>Notes:</strong> Save short study notes (local only).</div>
+      <div class="feature"><strong>Offline front-end:</strong> This demo runs entirely in your browser.</div>
+
+      <h4 style="margin-top:14px">Saved notes</h4>
+      <div id="notesList" style="min-height:80px; margin-top:8px; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02); color:var(--muted)">No notes yet.</div>
+
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <input id="noteInput" placeholder="Write a short note..." style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:inherit">
+        <button class="btn" id="saveNote">Save</button>
+      </div>
+    </div>
+
+    <div class="panel right chat">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
+        <h3 style="margin:0">Study Chat (demo)</h3>
+        <div style="color:var(--muted); font-size:13px">Try: "Explain auxiliary verbs — commerce" </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="msg bot">Namaste! I'm Ruminate — paste your question below and I'll answer as best I can (demo).</div>
+      </div>
+
+      <div class="composer">
+        <input id="userInput" placeholder="Type a question (e.g. 'Explain auxiliaries in commerce')">
+        <button class="btn" id="sendBtn">Ask</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Tip: This is a front-end demo. For a full AI-powered assistant you'd connect this UI to a server or API.
+  </footer>
+
+  <script>
+    // Simple front-end demo logic (no external calls)
+    const messagesEl = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sampleBtn = document.getElementById('sampleTopBtn');
+    const noteInput = document.getElementById('noteInput');
+    const saveNote = document.getElementById('saveNote');
+    const notesList = document.getElementById('notesList');
+
+    function addMessage(text, cls='bot'){
+      const d = document.createElement('div');
+      d.className = 'msg ' + cls;
+      d.textContent = text;
+      messagesEl.appendChild(d);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function botReply(q){
+      const ql = q.toLowerCase();
+      // Some simple canned replies tailored to an 11th commerce student
+      if(ql.includes('auxiliary') || ql.includes('auxiliaries')){
+        return "Auxiliary verbs (helping verbs) are used with main verbs to form tenses, passive voice, and questions. Examples: be, have, do. E.g., 'She has finished' — 'has' is auxiliary forming present perfect.";
+      }
+      if(ql.includes('notes') || ql.includes('study tips')){
+        return "Study tip: Make short notes after each topic (3–5 points). Review them with spaced repetition — briefly after 1 day, 3 days, 1 week.";
+      }
+      if(ql.includes('quiz') || ql.includes('practice')){
+        return "Practice idea: Convert key points into 5 one-line questions; test yourself daily for 7 days.";
+      }
+      if(ql.trim()===''){
+        return "Kuch poochho 😊";
+      }
+      return "Here's a short answer: " + q + ". (This is a demo reply — connect to an AI backend for richer answers.)";
+    }
+
+    sendBtn.onclick = () => {
+      const text = userInput.value.trim();
+      if(!text) return;
+      addMessage(text, 'user');
+      addMessage('Typing...', 'bot');
+      userInput.value = '';
+      // fake "thinking"
+      setTimeout(()=> {
+        // replace last bot "Typing..." with real reply
+        const botMsgs = messagesEl.querySelectorAll('.msg.bot');
+        const lastBot = botMsgs[botMsgs.length-1];
+        lastBot.textContent = botReply(text);
+      }, 700);
+    }
+
+    sampleBtn.onclick = () => {
+      userInput.value = 'Explain auxiliary verbs';
+      sendBtn.onclick();
+    }
+
+    // Notes saved locally (localStorage)
+    function loadNotes(){
+      const raw = localStorage.getItem('ruminate_notes') || '[]';
+      try{
+        const arr = JSON.parse(raw);
+        if(arr.length===0){ notesList.textContent = 'No notes yet.'; return; }
+        notesList.innerHTML = '';
+        arr.forEach(n=>{
+          const el = document.createElement('div');
+          el.textContent = '• ' + n;
+          el.style.marginBottom = '6px';
+          notesList.appendChild(el);
+        });
+      }catch(e){ notesList.textContent = 'No notes yet.'; }
+    }
+
+    saveNote.onclick = () => {
+      const v = noteInput.value.trim();
+      if(!v) return;
+      const raw = localStorage.getItem('ruminate_notes') || '[]';
+      const arr = JSON.parse(raw);
+      arr.unshift(v);
+      localStorage.setItem('ruminate_notes', JSON.stringify(arr.slice(0,20)));
+      noteInput.value = '';
+      loadNotes();
+    }
+
+    loadNotes();
+  </script>
+</body>
+</html>
