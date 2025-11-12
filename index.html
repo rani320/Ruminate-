@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ruminate — AI Study Assistant</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#071023;color:#e6eef6;margin:0;padding:18px}
+    .box{max-width:720px;margin:20px auto;background:rgba(255,255,255,0.03);padding:16px;border-radius:12px}
+    .msg{padding:10px;border-radius:8px;margin:8px 0}
+    .user{background:linear-gradient(90deg,#60a5fa,#6ee7b7);color:#022}
+    .bot{background:rgba(255,255,255,0.02);color:#cbd5e1}
+    input{width:70%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button{padding:10px 12px;border-radius:8px;border:none;background:#6ee7b7;color:#042;font-weight:700}
+    .meta{color:#93a0b3;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Ruminate — AI Study Assistant</h2>
+    <div class="meta">Made by Ruminate Group</div>
+    <div id="messages">
+      <div class="msg bot">Namaste! Type a question below (demo will reply if no backend).</div>
+    </div>
+    <div style="margin-top:12px">
+      <input id="q" placeholder="Type question..." />
+      <button id="ask">Ask</button>
+    </div>
+    <p class="meta" style="margin-top:12px">Tip: For real AI answers we can add a small server later.</p>
+  </div>
+
+<script>
+const messages=document.getElementById('messages');
+document.getElementById('ask').onclick = ()=>{
+  const q=document.getElementById('q').value.trim();
+  if(!q) return;
+  const u=document.createElement('div'); u.className='msg user'; u.textContent=q; messages.appendChild(u);
+  const b=document.createElement('div'); b.className='msg bot'; b.textContent='Thinking...'; messages.appendChild(b);
+  document.getElementById('q').value='';
+  setTimeout(()=> {
+    const ans = q.toLowerCase().includes('auxiliary') ? 'Auxiliary verbs help form tenses: e.g., be, have, do.' : 'Demo reply: '+q;
+    b.textContent = ans;
+    window.scrollTo(0,document.body.scrollHeight);
+  },700);
+}
+</script>
+</body>
+</html>
