@@ -1,48 +1,209 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ruminate — AI Study Assistant</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;background:#071023;color:#e6eef6;margin:0;padding:18px}
-    .box{max-width:720px;margin:20px auto;background:rgba(255,255,255,0.03);padding:16px;border-radius:12px}
-    .msg{padding:10px;border-radius:8px;margin:8px 0}
-    .user{background:linear-gradient(90deg,#60a5fa,#6ee7b7);color:#022}
-    .bot{background:rgba(255,255,255,0.02);color:#cbd5e1}
-    input{width:70%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    button{padding:10px 12px;border-radius:8px;border:none;background:#6ee7b7;color:#042;font-weight:700}
-    .meta{color:#93a0b3;font-size:13px}
+    :root{
+      --bg:#f6fbff; --card:#ffffff; --muted:#4b6b86; --accent:#2b8cff; --glass: rgba(43,140,204,0.08);
+      --success:#16a34a; --danger:#ef4444;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; min-height:100vh; background:linear-gradient(180deg,#f8fbff,#eef7ff); color:#07263b;}
+    .container{max-width:980px;margin:20px auto;padding:18px;}
+    header{display:flex;align-items:center;gap:14px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:22px;box-shadow:0 6px 18px rgba(43,140,204,0.12)}
+    h1{margin:0;font-size:20px}
+    .lead{color:var(--muted);font-size:13px;margin-top:4px}
+    .top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .btn{background:var(--accent);color:white;padding:9px 12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+    .toggle{background:transparent;border:1px solid rgba(7,38,59,0.06);padding:8px;border-radius:10px;cursor:pointer}
+    main{display:grid;grid-template-columns:380px 1fr;gap:18px;margin-top:18px}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 20px rgba(15,40,60,0.04);border:1px solid rgba(7,38,59,0.03)}
+    .feature{font-size:14px;color:var(--muted);margin-bottom:10px;padding:8px;border-radius:8px;background:var(--glass)}
+    .notes{min-height:120px;overflow:auto;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(43,140,204,0.03),transparent);color:#083449}
+    .note-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(7,38,59,0.03)}
+    .small{font-size:13px;color:var(--muted)}
+    .chat{display:flex;flex-direction:column;height:60vh;min-height:420px}
+    .messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(43,140,204,0.015),transparent);border-radius:8px}
+    .msg{max-width:78%;padding:10px 12px;border-radius:10px;font-size:14px}
+    .msg.user{align-self:flex-end;background:linear-gradient(90deg,#60a5fa,#2b8cff);color:white}
+    .msg.bot{align-self:flex-start;background:#eef7ff;color:#073a57;border:1px solid rgba(43,140,204,0.08)}
+    .composer{display:flex;gap:8px;align-items:center;padding-top:10px}
+    .composer input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(7,38,59,0.06);background:transparent}
+    .mode-pill{display:inline-flex;gap:8px;align-items:center;padding:6px 8px;border-radius:999px;border:1px solid rgba(7,38,59,0.06);background:linear-gradient(180deg,white,rgba(240,248,255,0.6))}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+    @media(max-width:920px){main{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Ruminate — AI Study Assistant</h2>
-    <div class="meta">Made by Ruminate Group</div>
-    <div id="messages">
-      <div class="msg bot">Namaste! Type a question below (demo will reply if no backend).</div>
-    </div>
-    <div style="margin-top:12px">
-      <input id="q" placeholder="Type question..." />
-      <button id="ask">Ask</button>
-    </div>
-    <p class="meta" style="margin-top:12px">Tip: For real AI answers we can add a small server later.</p>
+  <div class="container">
+    <header>
+      <div class="logo">R</div>
+      <div>
+        <h1>Ruminate — AI Study Assistant</h1>
+        <div class="lead">Smart notes, quick explanations and practice — Made for Class 11 Commerce.</div>
+      </div>
+      <div class="top-actions">
+        <div class="mode-pill" id="modeDisplay">Mode: <strong id="modeName" style="margin-left:6px">Simple</strong></div>
+        <button class="btn" id="toggleMode">Switch to Smart</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <h3 style="margin-top:0">Features</h3>
+        <div class="feature"><strong>Dual Mode:</strong> Simple (fast demo) and Smart (connects to server for rich answers).</div>
+        <div class="feature"><strong>Notes:</strong> Save short study notes locally.</div>
+        <div class="feature"><strong>Offline friendly:</strong> Works as demo without a backend.</div>
+
+        <h4 style="margin-top:12px">Saved notes</h4>
+        <div class="notes" id="notesList"><div class="small">No notes yet.</div></div>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input id="noteInput" placeholder="Write a short note..." style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(7,38,59,0.06)">
+          <button class="btn" id="saveNote">Save</button>
+        </div>
+
+        <div style="margin-top:12px" class="small">
+          Tip: To get real Smart answers, deploy the optional backend server (instructions included). You can still demo both modes without it.
+        </div>
+      </div>
+
+      <div class="card chat">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <h3 style="margin:0">Study Chat</h3>
+            <div class="small">Ask questions about commerce topics (e.g., "Explain auxiliary verbs").</div>
+          </div>
+          <div style="text-align:right">
+            <div class="small">Made by Ruminate Group</div>
+          </div>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="msg bot">Namaste! Select a mode and ask your question — Simple shows quick answers; Smart will fetch richer replies if a backend is available.</div>
+        </div>
+
+        <div class="composer">
+          <input id="userInput" placeholder="Type your question..." />
+          <button class="btn" id="sendBtn">Ask</button>
+        </div>
+
+        <div style="margin-top:10px;color:var(--muted);font-size:13px">
+          <strong>Smart status:</strong> <span id="smartStatus">No backend connected (Smart mode will fallback to demo replies).</span>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="small">Ruminate — AI Study Assistant · Made by Ruminate Group · GitHub: rani320</div>
+    </footer>
   </div>
 
 <script>
-const messages=document.getElementById('messages');
-document.getElementById('ask').onclick = ()=>{
-  const q=document.getElementById('q').value.trim();
-  if(!q) return;
-  const u=document.createElement('div'); u.className='msg user'; u.textContent=q; messages.appendChild(u);
-  const b=document.createElement('div'); b.className='msg bot'; b.textContent='Thinking...'; messages.appendChild(b);
-  document.getElementById('q').value='';
-  setTimeout(()=> {
-    const ans = q.toLowerCase().includes('auxiliary') ? 'Auxiliary verbs help form tenses: e.g., be, have, do.' : 'Demo reply: '+q;
-    b.textContent = ans;
-    window.scrollTo(0,document.body.scrollHeight);
-  },700);
+// UI & dual-mode logic
+let mode = 'simple'; // 'simple' or 'smart'
+const modeName = document.getElementById('modeName');
+const toggleMode = document.getElementById('toggleMode');
+const smartStatus = document.getElementById('smartStatus');
+const messages = document.getElementById('messages');
+
+function setMode(m){
+  mode = m;
+  modeName.textContent = m === 'simple' ? 'Simple' : 'Smart';
+  toggleMode.textContent = m === 'simple' ? 'Switch to Smart' : 'Switch to Simple';
+  // try ping backend when switching to smart
+  if(m === 'smart'){
+    checkBackend();
+  }
 }
+toggleMode.onclick = ()=> setMode(mode === 'simple' ? 'smart' : 'simple');
+
+function addMessage(text, cls='bot'){
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.textContent = text;
+  messages.appendChild(d);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// simple canned replies
+function simpleReply(q){
+  const l = q.toLowerCase();
+  if(l.includes('auxiliary')) return "Auxiliary verbs help form tenses and questions. Examples: is, have, do.";
+  if(l.includes('notes') || l.includes('study')) return "Tip: Make short notes (3–5 points) and review after 1 day, 3 days, 1 week.";
+  if(l.includes('define') || l.includes('meaning')) return "Give the term and subject and I'll explain simply.";
+  return "Quick answer: " + q + " (demo).";
+}
+
+// smart reply uses /api/chat; falls back to local demo if backend missing
+async function smartReply(q){
+  try{
+    const resp = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:q})
+    });
+    if(!resp.ok) throw new Error('no backend');
+    const j = await resp.json();
+    return j.answer || 'No answer from backend.';
+  }catch(e){
+    return simpleReply(q) + " (fallback — backend not connected)";
+  }
+}
+
+async function askQuestion(q){
+  addMessage(q, 'user');
+  addMessage('Thinking...', 'bot');
+  const botMsgs = messages.querySelectorAll('.msg.bot');
+  const lastBot = botMsgs[botMsgs.length-1];
+  let ans = '';
+  if(mode === 'simple') ans = simpleReply(q);
+  else ans = await smartReply(q);
+  lastBot.textContent = ans;
+}
+
+document.getElementById('sendBtn').onclick = ()=> {
+  const q = document.getElementById('userInput').value.trim();
+  if(!q) return;
+  document.getElementById('userInput').value = '';
+  askQuestion(q);
+}
+
+// notes local storage
+function renderNotes(){
+  const arr = JSON.parse(localStorage.getItem('rum_notes') || '[]');
+  const list = document.getElementById('notesList');
+  if(!arr.length){ list.innerHTML = '<div class="small">No notes yet.</div>'; return; }
+  list.innerHTML = '';
+  arr.forEach((n, i)=>{
+    const row = document.createElement('div'); row.className='note-row';
+    const t = document.createElement('div'); t.textContent = n;
+    const del = document.createElement('button'); del.textContent='Delete'; del.style.border='none'; del.style.background='transparent'; del.style.color='var(--danger)'; del.style.cursor='pointer';
+    del.onclick = ()=>{ arr.splice(i,1); localStorage.setItem('rum_notes', JSON.stringify(arr)); renderNotes(); }
+    row.appendChild(t); row.appendChild(del); list.appendChild(row);
+  });
+}
+document.getElementById('saveNote').onclick = ()=>{
+  const v = document.getElementById('noteInput').value.trim(); if(!v) return;
+  const arr = JSON.parse(localStorage.getItem('rum_notes') || '[]'); arr.unshift(v); localStorage.setItem('rum_notes', JSON.stringify(arr.slice(0,20))); document.getElementById('noteInput').value=''; renderNotes();
+}
+renderNotes();
+
+// backend check
+async function checkBackend(){
+  try{
+    const resp = await fetch('/api/health');
+    if(resp.ok){ smartStatus.textContent = 'Backend connected — Smart replies enabled.'; smartStatus.style.color='var(--success)'; }
+    else { smartStatus.textContent = 'No backend connected (Smart will fallback).'; smartStatus.style.color=''; }
+  }catch(e){
+    smartStatus.textContent = 'No backend connected (Smart will fallback).';
+    smartStatus.style.color='';
+  }
+}
+// initial
+setMode('simple');
 </script>
 </body>
 </html>
